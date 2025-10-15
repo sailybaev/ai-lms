@@ -1,0 +1,306 @@
+// Prisma schema for multi-tenant LMS
+// Provider can be adjusted; defaulting to PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id         String                 @id @default(uuid())
+  slug       String                 @unique
+  name       String
+  logoUrl    String?                @map("logo_url")
+  settings   Json?                  @map("settings_json")
+  createdAt  DateTime               @default(now()) @map("created_at")
+
+  domains    OrganizationDomain[]
+  memberships Membership[]
+  courses    Course[]
+  enrollments Enrollment[]
+  assignments Assignment[]
+  groups     Group[]
+  progress   ProgressEvent[]
+  aiSessions AIChatSession[]
+  files      File[]
+}
+
+model OrganizationDomain {
+  id         String       @id @default(uuid())
+  org        Organization @relation(fields: [orgId], references: [id])
+  orgId      String       @map("org_id")
+  domain     String       @unique
+  verifiedAt DateTime?    @map("verified_at")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  avatarUrl    String?       @map("avatar_url")
+  passwordHash String?       @map("password_hash")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  lastActiveAt DateTime?     @map("last_active_at")
+
+  memberships  Membership[]
+  createdCourses Course[]    @relation("CourseCreatedBy")
+  submissions  Submission[]
+  graded       Grade[]       @relation("GradedBy")
+  aiSessions   AIChatSession[]
+  files        File[]        @relation("UploadedFiles")
+  // Back-relations to satisfy relations
+  courseInstructors CourseInstructor[]
+  enrollments       Enrollment[]
+  groupMemberships  GroupMember[]
+  progressEvents    ProgressEvent[]
+}
+
+enum Role {
+  admin
+  teacher
+  student
+}
+
+enum MembershipStatus {
+  active
+  invited
+  suspended
+}
+
+model Membership {
+  id        String        @id @default(uuid())
+  org       Organization  @relation(fields: [orgId], references: [id])
+  orgId     String        @map("org_id")
+  user      User          @relation(fields: [userId], references: [id])
+  userId    String        @map("user_id")
+  role      Role
+  status    MembershipStatus @default(active)
+
+  @@unique([orgId, userId])
+}
+
+enum CourseStatus {
+  draft
+  active
+  archived
+}
+
+model Course {
+  id          String         @id @default(uuid())
+  org         Organization   @relation(fields: [orgId], references: [id])
+  orgId       String         @map("org_id")
+  title       String
+  description String?
+  thumbnailUrl String?       @map("thumbnail_url")
+  status      CourseStatus   @default(draft)
+  createdBy   User           @relation("CourseCreatedBy", fields: [createdById], references: [id])
+  createdById String         @map("created_by")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  sections    CourseSection[]
+  instructors CourseInstructor[]
+  enrollments Enrollment[]
+  assignments Assignment[]
+  groups      Group[]
+  // Back-relations
+  progressEvents ProgressEvent[]
+  aiSessions     AIChatSession[]
+}
+
+model CourseInstructor {
+  id        String  @id @default(uuid())
+  course    Course  @relation(fields: [courseId], references: [id])
+  courseId  String  @map("course_id")
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @map("user_id")
+
+  @@unique([courseId, userId])
+}
+
+model CourseSection {
+  id       String   @id @default(uuid())
+  course   Course   @relation(fields: [courseId], references: [id])
+  courseId String   @map("course_id")
+  title    String
+  position Int
+
+  lessons  Lesson[]
+}
+
+model Lesson {
+  id         String       @id @default(uuid())
+  section    CourseSection @relation(fields: [sectionId], references: [id])
+  sectionId  String       @map("section_id")
+  title      String
+  content    Json?        @map("content_richtext")
+  videoUrl   String?      @map("video_url")
+  position   Int
+  duration   Int?         @map("duration_minutes")
+  // Back-relations
+  progressEvents ProgressEvent[]
+  aiSessions     AIChatSession[]
+}
+
+enum EnrollmentStatus {
+  active
+  completed
+  dropped
+}
+
+model Enrollment {
+  id        String       @id @default(uuid())
+  org       Organization @relation(fields: [orgId], references: [id])
+  orgId     String       @map("org_id")
+  course    Course       @relation(fields: [courseId], references: [id])
+  courseId  String       @map("course_id")
+  user      User         @relation(fields: [userId], references: [id])
+  userId    String       @map("user_id")
+  status    EnrollmentStatus @default(active)
+
+  @@unique([courseId, userId])
+}
+
+enum AssignmentType {
+  essay
+  quiz
+  project
+}
+
+model Assignment {
+  id          String       @id @default(uuid())
+  org         Organization @relation(fields: [orgId], references: [id])
+  orgId       String       @map("org_id")
+  course      Course       @relation(fields: [courseId], references: [id])
+  courseId    String       @map("course_id")
+  title       String
+  description Json?        @map("description_richtext")
+  dueAt       DateTime?    @map("due_at")
+  maxPoints   Int?         @map("max_points")
+  type        AssignmentType
+
+  submissions Submission[]
+}
+
+model Submission {
+  id          String     @id @default(uuid())
+  assignment  Assignment @relation(fields: [assignmentId], references: [id])
+  assignmentId String    @map("assignment_id")
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String     @map("user_id")
+  submittedAt DateTime   @map("submitted_at") @default(now())
+  content     Json?      @map("content_json")
+  attachment  String?    @map("attachment_url")
+
+  grade       Grade?
+}
+
+model Grade {
+  id         String     @id @default(uuid())
+  submission Submission @relation(fields: [submissionId], references: [id])
+  submissionId String   @map("submission_id") @unique
+  gradedBy   User       @relation("GradedBy", fields: [gradedById], references: [id])
+  gradedById String     @map("graded_by")
+  score      Int
+  feedback   Json?      @map("feedback_richtext")
+  gradedAt   DateTime   @default(now()) @map("graded_at")
+}
+
+model Group {
+  id          String       @id @default(uuid())
+  org         Organization @relation(fields: [orgId], references: [id])
+  orgId       String       @map("org_id")
+  course      Course?      @relation(fields: [courseId], references: [id])
+  courseId    String?      @map("course_id")
+  name        String
+  description String?
+
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id       String  @id @default(uuid())
+  group    Group   @relation(fields: [groupId], references: [id])
+  groupId  String  @map("group_id")
+  user     User    @relation(fields: [userId], references: [id])
+  userId   String  @map("user_id")
+
+  @@unique([groupId, userId])
+}
+
+enum ProgressEventType {
+  viewed_lesson
+  completed_assignment
+  login
+  ai_usage
+}
+
+model ProgressEvent {
+  id        String       @id @default(uuid())
+  org       Organization @relation(fields: [orgId], references: [id])
+  orgId     String       @map("org_id")
+  user      User         @relation(fields: [userId], references: [id])
+  userId    String       @map("user_id")
+  course    Course?      @relation(fields: [courseId], references: [id])
+  courseId  String?      @map("course_id")
+  lesson    Lesson?      @relation(fields: [lessonId], references: [id])
+  lessonId  String?      @map("lesson_id")
+  type      ProgressEventType
+  metadata  Json?        @map("metadata_json")
+  occurredAt DateTime    @default(now()) @map("occurred_at")
+}
+
+model AIChatSession {
+  id        String       @id @default(uuid())
+  org       Organization @relation(fields: [orgId], references: [id])
+  orgId     String       @map("org_id")
+  user      User         @relation(fields: [userId], references: [id])
+  userId    String       @map("user_id")
+  course    Course?      @relation(fields: [courseId], references: [id])
+  courseId  String?      @map("course_id")
+  lesson    Lesson?      @relation(fields: [lessonId], references: [id])
+  lessonId  String?      @map("lesson_id")
+  title     String?
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  messages  AIMessage[]
+}
+
+enum Sender {
+  user
+  assistant
+  system
+}
+
+model AIMessage {
+  id        String         @id @default(uuid())
+  session   AIChatSession  @relation(fields: [sessionId], references: [id])
+  sessionId String         @map("session_id")
+  sender    Sender
+  content   String
+  tokens    Int?
+  createdAt DateTime       @default(now()) @map("created_at")
+}
+
+enum FileKind {
+  assignment_attachment
+  submission_attachment
+  lesson_asset
+}
+
+model File {
+  id         String       @id @default(uuid())
+  org        Organization @relation(fields: [orgId], references: [id])
+  orgId      String       @map("org_id")
+  uploader   User         @relation("UploadedFiles", fields: [uploaderId], references: [id])
+  uploaderId String       @map("uploader_id")
+  url        String
+  kind       FileKind
+  createdAt  DateTime     @default(now()) @map("created_at")
+}
+
+
