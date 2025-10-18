@@ -59,6 +59,7 @@ const sidebarConfig: SidebarConfig = {
 		{ title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
 		{ title: 'Students', url: '/admin/students', icon: Users },
 		{ title: 'Teachers', url: '/admin/teachers', icon: GraduationCap },
+		{ title: 'All Users', url: '/admin/users', icon: Users },
 		{ title: 'Courses', url: '/admin/courses', icon: BookOpen },
 		{ title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
 		{ title: 'AI Tools', url: '/admin/ai-tools', icon: Sparkles },

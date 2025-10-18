@@ -96,6 +96,14 @@ export default function UsersPage() {
 		orgId: '',
 	})
 
+	// New user form state
+	const [newUser, setNewUser] = useState({
+		name: '',
+		email: '',
+		role: 'student',
+		orgId: '',
+	})
+
 	// Fetch users and organizations on mount
 	useEffect(() => {
 		loadUsers()
@@ -149,6 +157,9 @@ export default function UsersPage() {
 		return matchesRole && matchesStatus && matchesSearch
 	})
 
+		return matchesRole && matchesStatus && matchesSearch
+	})
+
 	const handleAddUser = async () => {
 		if (!newUser.name || !newUser.email || !newUser.role || !newUser.orgId) {
 			toast({
@@ -173,8 +184,7 @@ export default function UsersPage() {
 		} catch (error: any) {
 			toast({
 				title: 'Error',
-				description:
-					error.message || 'Failed to create user. Please try again.',
+				description: error.message || 'Failed to create user. Please try again.',
 				variant: 'destructive',
 			})
 		} finally {
@@ -192,24 +202,11 @@ export default function UsersPage() {
 
 		setIsLoading(true)
 		try {
-			// Update basic user info
-			const updatedUser = await updateUser(editingUser.id, {
-				name: editingUser.name,
-				email: editingUser.email,
-			})
+			// In a real app, this would call the API
+			// await updateUser(editingUser.id, { name: editingUser.name, email: editingUser.email })
+			// await updateUserMembership(editingUser.id, { orgId: "current-org", role: editingUser.role.toLowerCase(), status: editingUser.status.toLowerCase() })
 
-			// Update membership if changed
-			if (editingUser.memberships.length > 0) {
-				const membership = editingUser.memberships[0]
-				await updateUserMembership(editingUser.id, {
-					orgId: membership.org.id,
-					role: membership.role,
-					status: membership.status,
-				})
-			}
-
-			// Reload users to get fresh data
-			await loadUsers()
+			setUsers(users.map(u => (u.id === editingUser.id ? editingUser : u)))
 			setIsEditDialogOpen(false)
 			setEditingUser(null)
 
@@ -217,11 +214,10 @@ export default function UsersPage() {
 				title: 'User updated',
 				description: 'User information has been successfully updated.',
 			})
-		} catch (error: any) {
+		} catch (error) {
 			toast({
 				title: 'Error',
-				description:
-					error.message || 'Failed to update user. Please try again.',
+				description: 'Failed to update user. Please try again.',
 				variant: 'destructive',
 			})
 		} finally {
@@ -234,7 +230,9 @@ export default function UsersPage() {
 
 		setIsLoading(true)
 		try {
-			await deleteUser(userToDelete.id)
+			// In a real app, this would call the API
+			// await deleteUser(userToDelete.id)
+
 			setUsers(users.filter(u => u.id !== userToDelete.id))
 			setUserToDelete(null)
 
@@ -242,11 +240,10 @@ export default function UsersPage() {
 				title: 'User deleted',
 				description: 'User has been successfully deleted.',
 			})
-		} catch (error: any) {
+		} catch (error) {
 			toast({
 				title: 'Error',
-				description:
-					error.message || 'Failed to delete user. Please try again.',
+				description: 'Failed to delete user. Please try again.',
 				variant: 'destructive',
 			})
 		} finally {
@@ -254,58 +251,31 @@ export default function UsersPage() {
 		}
 	}
 
-	const handleToggleStatus = async (user: UserWithMembership) => {
-		if (user.memberships.length === 0) return
-
+	const handleToggleStatus = async (user: User) => {
 		setIsLoading(true)
 		try {
-			const membership = user.memberships[0]
-			const newStatus =
-				membership.status === 'active'
-					? ('suspended' as const)
-					: ('active' as const)
+			const newStatus = user.status === 'Active' ? 'Suspended' : 'Active'
 
-			await updateUserMembership(user.id, {
-				orgId: membership.org.id,
-				status: newStatus,
-			})
+			// In a real app, this would call the API
+			// await updateUserMembership(user.id, { orgId: "current-org", status: newStatus.toLowerCase() })
 
-			// Reload users to get fresh data
-			await loadUsers()
+			setUsers(
+				users.map(u => (u.id === user.id ? { ...u, status: newStatus } : u))
+			)
 
 			toast({
 				title: 'Status updated',
-				description: `User has been ${newStatus}.`,
+				description: `User has been ${newStatus.toLowerCase()}.`,
 			})
-		} catch (error: any) {
+		} catch (error) {
 			toast({
 				title: 'Error',
-				description:
-					error.message || 'Failed to update user status. Please try again.',
+				description: 'Failed to update user status. Please try again.',
 				variant: 'destructive',
 			})
 		} finally {
 			setIsLoading(false)
 		}
-	}
-
-	// Helper to get primary role and status
-	const getPrimaryMembership = (user: UserWithMembership) => {
-		return (
-			user.memberships[0] || {
-				role: 'student',
-				status: 'active',
-				org: { name: 'N/A' },
-			}
-		)
-	}
-
-	if (isFetchingUsers) {
-		return (
-			<div className='flex items-center justify-center h-[50vh]'>
-				<Loader2 className='w-8 h-8 animate-spin text-primary' />
-			</div>
-		)
 	}
 
 	return (
@@ -317,7 +287,7 @@ export default function UsersPage() {
 						Manage all users across the platform
 					</p>
 				</div>
-				<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+				<Dialog>
 					<DialogTrigger asChild>
 						<Button>
 							<UserPlus className='w-4 h-4 mr-2' />
@@ -334,35 +304,15 @@ export default function UsersPage() {
 						<div className='space-y-4 py-4'>
 							<div className='space-y-2'>
 								<Label htmlFor='name'>Full Name</Label>
-								<Input
-									id='name'
-									placeholder='Enter full name'
-									value={newUser.name}
-									onChange={e =>
-										setNewUser({ ...newUser, name: e.target.value })
-									}
-								/>
+								<Input id='name' placeholder='Enter full name' />
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='email'>Email</Label>
-								<Input
-									id='email'
-									type='email'
-									placeholder='user@example.com'
-									value={newUser.email}
-									onChange={e =>
-										setNewUser({ ...newUser, email: e.target.value })
-									}
-								/>
+								<Input id='email' type='email' placeholder='user@example.com' />
 							</div>
 							<div className='space-y-2'>
 								<Label htmlFor='role'>Role</Label>
-								<Select
-									value={newUser.role}
-									onValueChange={value =>
-										setNewUser({ ...newUser, role: value })
-									}
-								>
+								<Select>
 									<SelectTrigger id='role'>
 										<SelectValue placeholder='Select role' />
 									</SelectTrigger>
@@ -373,38 +323,10 @@ export default function UsersPage() {
 									</SelectContent>
 								</Select>
 							</div>
-							<div className='space-y-2'>
-								<Label htmlFor='org'>Organization</Label>
-								<Select
-									value={newUser.orgId}
-									onValueChange={value =>
-										setNewUser({ ...newUser, orgId: value })
-									}
-								>
-									<SelectTrigger id='org'>
-										<SelectValue placeholder='Select organization' />
-									</SelectTrigger>
-									<SelectContent>
-										{organizations.map(org => (
-											<SelectItem key={org.id} value={org.id}>
-												{org.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
 						</div>
 						<DialogFooter>
-							<Button
-								variant='outline'
-								onClick={() => setIsAddDialogOpen(false)}
-								disabled={isLoading}
-							>
-								Cancel
-							</Button>
-							<Button onClick={handleAddUser} disabled={isLoading}>
-								{isLoading ? 'Creating...' : 'Create User'}
-							</Button>
+							<Button variant='outline'>Cancel</Button>
+							<Button>Create User</Button>
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
@@ -433,16 +355,6 @@ export default function UsersPage() {
 								<SelectItem value='admin'>Admins</SelectItem>
 							</SelectContent>
 						</Select>
-						<Select value={statusFilter} onValueChange={setStatusFilter}>
-							<SelectTrigger className='w-full sm:w-[180px]'>
-								<SelectValue placeholder='Filter by status' />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value='all'>All Statuses</SelectItem>
-								<SelectItem value='active'>Active</SelectItem>
-								<SelectItem value='suspended'>Suspended</SelectItem>
-							</SelectContent>
-						</Select>
 					</div>
 
 					<div className='border border-border rounded-lg overflow-hidden'>
@@ -451,9 +363,6 @@ export default function UsersPage() {
 								<tr>
 									<th className='text-left p-3 text-sm font-medium text-muted-foreground'>
 										User
-									</th>
-									<th className='text-left p-3 text-sm font-medium text-muted-foreground'>
-										Organization
 									</th>
 									<th className='text-left p-3 text-sm font-medium text-muted-foreground'>
 										Role
@@ -470,108 +379,93 @@ export default function UsersPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{filteredUsers.length === 0 ? (
-									<tr>
-										<td
-											colSpan={6}
-											className='p-8 text-center text-muted-foreground'
-										>
-											No users found
+								{filteredUsers.map(user => (
+									<tr
+										key={user.id}
+										className='border-t border-border hover:bg-muted/30 transition-colors'
+									>
+										<td className='p-3'>
+											<div className='flex items-center gap-3'>
+												<div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center'>
+													<span className='text-sm font-medium text-primary'>
+														{user.name.charAt(0)}
+													</span>
+												</div>
+												<div>
+													<p className='font-medium'>{user.name}</p>
+													<p className='text-sm text-muted-foreground flex items-center gap-1'>
+														<Mail className='w-3 h-3' />
+														{user.email}
+													</p>
+												</div>
+											</div>
+										</td>
+										<td className='p-3'>
+											<Badge variant='outline' className='gap-1'>
+												{user.role === 'Admin' && (
+													<Shield className='w-3 h-3' />
+												)}
+												{user.role}
+											</Badge>
+										</td>
+										<td className='p-3'>
+											<span
+												className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+													user.status === 'Active'
+														? 'bg-green-500/10 text-green-500'
+														: 'bg-red-500/10 text-red-500'
+												}`}
+											>
+												{user.status}
+											</span>
+										</td>
+										<td className='p-3 text-sm text-muted-foreground'>
+											{user.joined}
+										</td>
+										<td className='p-3 text-right'>
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button variant='ghost' size='icon'>
+														<MoreVertical className='w-4 h-4' />
+													</Button>
+												</DropdownMenuTrigger>
+												<DropdownMenuContent align='end'>
+													<DropdownMenuLabel>Actions</DropdownMenuLabel>
+													<DropdownMenuSeparator />
+													<DropdownMenuItem
+														onClick={() => handleEditUser(user)}
+													>
+														<Edit className='w-4 h-4 mr-2' />
+														Edit User
+													</DropdownMenuItem>
+													<DropdownMenuItem
+														onClick={() => handleToggleStatus(user)}
+													>
+														{user.status === 'Active' ? (
+															<>
+																<Ban className='w-4 h-4 mr-2' />
+																Suspend User
+															</>
+														) : (
+															<>
+																<CheckCircle className='w-4 h-4 mr-2' />
+																Activate User
+															</>
+														)}
+													</DropdownMenuItem>
+													<DropdownMenuSeparator />
+													<DropdownMenuItem
+														variant='destructive'
+														onClick={() => setUserToDelete(user)}
+													>
+														<Trash2 className='w-4 h-4 mr-2' />
+														Delete User
+													</DropdownMenuItem>
+												</DropdownMenuContent>
+											</DropdownMenu>
 										</td>
 									</tr>
-								) : (
-									filteredUsers.map(user => {
-										const membership = getPrimaryMembership(user)
-										return (
-											<tr
-												key={user.id}
-												className='border-t border-border hover:bg-muted/30 transition-colors'
-											>
-												<td className='p-3'>
-													<div className='flex items-center gap-3'>
-														<div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center'>
-															<span className='text-sm font-medium text-primary'>
-																{user.name.charAt(0).toUpperCase()}
-															</span>
-														</div>
-														<div>
-															<p className='font-medium'>{user.name}</p>
-															<p className='text-sm text-muted-foreground flex items-center gap-1'>
-																<Mail className='w-3 h-3' />
-																{user.email}
-															</p>
-														</div>
-													</div>
-												</td>
-												<td className='p-3'>
-													<span className='text-sm'>{membership.org.name}</span>
-												</td>
-												<td className='p-3'>
-													<Badge variant='outline' className='gap-1'>
-														{membership.role === 'admin' && (
-															<Shield className='w-3 h-3' />
-														)}
-														{formatRole(membership.role)}
-													</Badge>
-												</td>
-												<td className='p-3'>
-													<span
-														className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-															membership.status
-														)}`}
-													>
-														{formatRole(membership.status)}
-													</span>
-												</td>
-												<td className='p-3 text-sm text-muted-foreground'>
-													{new Date(user.createdAt).toLocaleDateString()}
-												</td>
-												<td className='p-3 text-right'>
-													<DropdownMenu>
-														<DropdownMenuTrigger asChild>
-															<Button variant='ghost' size='icon'>
-																<MoreVertical className='w-4 h-4' />
-															</Button>
-														</DropdownMenuTrigger>
-														<DropdownMenuContent align='end'>
-															<DropdownMenuLabel>Actions</DropdownMenuLabel>
-															<DropdownMenuSeparator />
-															<DropdownMenuItem
-																onClick={() => handleEditUser(user)}
-															>
-																<Edit className='w-4 h-4 mr-2' />
-																Edit User
-															</DropdownMenuItem>
-															<DropdownMenuItem
-																onClick={() => handleToggleStatus(user)}
-															>
-																{membership.status === 'active' ? (
-																	<>
-																		<Ban className='w-4 h-4 mr-2' />
-																		Suspend User
-																	</>
-																) : (
-																	<>
-																		<CheckCircle className='w-4 h-4 mr-2' />
-																		Activate User
-																	</>
-																)}
-															</DropdownMenuItem>
-															<DropdownMenuSeparator />
-															<DropdownMenuItem
-																className='text-destructive focus:text-destructive'
-																onClick={() => setUserToDelete(user)}
-															>
-																<Trash2 className='w-4 h-4 mr-2' />
-																Delete User
-															</DropdownMenuItem>
-														</DropdownMenuContent>
-													</DropdownMenu>
-												</td>
-											</tr>
-										)
-									})
-								)}
+								))}
 							</tbody>
 						</table>
 					</div>
@@ -610,61 +504,44 @@ export default function UsersPage() {
 									}
 								/>
 							</div>
-							{editingUser.memberships.length > 0 && (
-								<>
-									<div className='space-y-2'>
-										<Label htmlFor='edit-role'>Role</Label>
-										<Select
-											value={editingUser.memberships[0].role}
-											onValueChange={value => {
-												const updatedMemberships = [...editingUser.memberships]
-												updatedMemberships[0] = {
-													...updatedMemberships[0],
-													role: value as any,
-												}
-												setEditingUser({
-													...editingUser,
-													memberships: updatedMemberships,
-												})
-											}}
-										>
-											<SelectTrigger id='edit-role'>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value='student'>Student</SelectItem>
-												<SelectItem value='teacher'>Teacher</SelectItem>
-												<SelectItem value='admin'>Admin</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
-									<div className='space-y-2'>
-										<Label htmlFor='edit-status'>Status</Label>
-										<Select
-											value={editingUser.memberships[0].status}
-											onValueChange={value => {
-												const updatedMemberships = [...editingUser.memberships]
-												updatedMemberships[0] = {
-													...updatedMemberships[0],
-													status: value as any,
-												}
-												setEditingUser({
-													...editingUser,
-													memberships: updatedMemberships,
-												})
-											}}
-										>
-											<SelectTrigger id='edit-status'>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value='active'>Active</SelectItem>
-												<SelectItem value='suspended'>Suspended</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
-								</>
-							)}
+							<div className='space-y-2'>
+								<Label htmlFor='edit-role'>Role</Label>
+								<Select
+									value={editingUser.role.toLowerCase()}
+									onValueChange={value =>
+										setEditingUser({
+											...editingUser,
+											role: value.charAt(0).toUpperCase() + value.slice(1),
+										})
+									}
+								>
+									<SelectTrigger id='edit-role'>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value='student'>Student</SelectItem>
+										<SelectItem value='teacher'>Teacher</SelectItem>
+										<SelectItem value='admin'>Admin</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+							<div className='space-y-2'>
+								<Label htmlFor='edit-status'>Status</Label>
+								<Select
+									value={editingUser.status}
+									onValueChange={value =>
+										setEditingUser({ ...editingUser, status: value })
+									}
+								>
+									<SelectTrigger id='edit-status'>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value='Active'>Active</SelectItem>
+										<SelectItem value='Suspended'>Suspended</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
 						</div>
 					)}
 					<DialogFooter>

@@ -13,10 +13,11 @@ async function getProfile(org: string, email: string) {
 export default async function ProfilePage({
 	params,
 }: {
-	params: { org: string }
+	params: Promise<{ org: string }>
 }) {
-	const { email } = await requireOrgRole(params.org, ['student'])
-	const data = await getProfile(params.org, email)
+	const { org } = await params
+	const { email } = await requireOrgRole(org, ['student'])
+	const data = await getProfile(org, email)
 
 	if (!data) {
 		return <div>Profile not found</div>

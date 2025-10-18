@@ -3,9 +3,10 @@ import { requireOrgRole } from '@/lib/auth'
 export default async function OrgAdminDashboardPage({
 	params,
 }: {
-	params: { org: string }
+	params: Promise<{ org: string }>
 }) {
-	await requireOrgRole(params.org, ['admin'])
+	const { org } = await params
+	await requireOrgRole(org, ['admin'])
 
 	return (
 		<div className='space-y-4'>

@@ -3,9 +3,10 @@ import { requireOrgRole } from '@/lib/auth'
 export default async function OrgStudentDashboardPage({
 	params,
 }: {
-	params: { org: string }
+	params: Promise<{ org: string }>
 }) {
-	await requireOrgRole(params.org, ['student'])
+	const { org } = await params
+	await requireOrgRole(org, ['student'])
 
 	return (
 		<div className='space-y-4'>
