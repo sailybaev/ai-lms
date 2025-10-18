@@ -40,6 +40,7 @@ type NavItem = {
 
 type SidebarConfig = {
 	admin: NavItem[]
+	orgAdmin: NavItem[]
 	teacher: NavItem[]
 	student: NavItem[]
 }
@@ -50,6 +51,15 @@ const sidebarConfig: SidebarConfig = {
 		{ title: 'Organizations', url: '/admin/organizations', icon: UsersRound },
 		{ title: 'User Management', url: '/admin/users', icon: Users },
 		{ title: 'Course Oversight', url: '/admin/courses', icon: BookOpen },
+		{ title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
+		{ title: 'AI Tools', url: '/admin/ai-tools', icon: Sparkles },
+		{ title: 'Settings', url: '/admin/settings', icon: Settings },
+	],
+	orgAdmin: [
+		{ title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
+		{ title: 'Students', url: '/admin/students', icon: Users },
+		{ title: 'Teachers', url: '/admin/teachers', icon: GraduationCap },
+		{ title: 'Courses', url: '/admin/courses', icon: BookOpen },
 		{ title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
 		{ title: 'AI Tools', url: '/admin/ai-tools', icon: Sparkles },
 		{ title: 'Settings', url: '/admin/settings', icon: Settings },
@@ -80,7 +90,7 @@ const sidebarConfig: SidebarConfig = {
 export function AppSidebar({
 	role,
 }: {
-	role: 'admin' | 'teacher' | 'student'
+	role: 'admin' | 'orgAdmin' | 'teacher' | 'student'
 }) {
 	const pathname = usePathname()
 	const items = sidebarConfig[role]
@@ -96,7 +106,7 @@ export function AppSidebar({
 					<div className='flex flex-col'>
 						<span className='text-sm font-semibold'>EduAI</span>
 						<span className='text-xs text-sidebar-foreground/60 capitalize'>
-							{role}
+							{role === 'orgAdmin' ? 'Org Admin' : role}
 						</span>
 					</div>
 				</Link>
@@ -132,7 +142,7 @@ export function AppSidebar({
 					<div className='flex-1 min-w-0'>
 						<p className='text-sm font-medium truncate'>Demo User</p>
 						<p className='text-xs text-sidebar-foreground/60 truncate capitalize'>
-							{role}
+							{role === 'orgAdmin' ? 'Org Admin' : role}
 						</p>
 					</div>
 				</div>

@@ -1,10 +1,12 @@
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
+import { requireOrgRole } from '@/lib/auth'
 
-export default async function OrgTeacherDashboardPage() {
-	const session = await getServerSession(authOptions as any)
-	if (!session) redirect('../login')
+export default async function OrgTeacherDashboardPage({
+	params,
+}: {
+	params: { org: string }
+}) {
+	await requireOrgRole(params.org, ['teacher'])
+
 	return (
 		<div className='space-y-4'>
 			<h1 className='text-3xl font-bold tracking-tight'>Teacher Dashboard</h1>
