@@ -11,7 +11,7 @@ async function main() {
 		create: {
 			slug: 'acme',
 			name: 'Acme University',
-
+			platformName: 'Acme Learning Platform',
 			settings: { locale: 'en', timezone: 'UTC' },
 			domains: { create: [{ domain: 'acme.example.com' }] },
 		},

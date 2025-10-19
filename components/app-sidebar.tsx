@@ -95,17 +95,29 @@ export function AppSidebar({
 }) {
 	const pathname = usePathname()
 	const items = sidebarConfig[role]
-	const { orgSlug } = useOrg()
+	const { orgSlug, organization } = useOrg()
+
+	// Use organization's branding if available, otherwise use defaults
+	const platformName = organization?.platformName || 'EduAI'
+	const logoUrl = organization?.logoUrl
 
 	return (
 		<Sidebar>
 			<SidebarHeader className='border-b border-sidebar-border p-4'>
 				<Link href='/' className='flex items-center gap-2'>
-					<div className='w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center'>
-						<GraduationCap className='w-5 h-5 text-sidebar-primary-foreground' />
+					<div className='w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center overflow-hidden'>
+						{logoUrl ? (
+							<img
+								src={logoUrl}
+								alt={platformName}
+								className='w-full h-full object-cover'
+							/>
+						) : (
+							<GraduationCap className='w-5 h-5 text-sidebar-primary-foreground' />
+						)}
 					</div>
 					<div className='flex flex-col'>
-						<span className='text-sm font-semibold'>EduAI</span>
+						<span className='text-sm font-semibold'>{platformName}</span>
 						<span className='text-xs text-sidebar-foreground/60 capitalize'>
 							{role === 'orgAdmin' ? 'Org Admin' : role}
 						</span>
