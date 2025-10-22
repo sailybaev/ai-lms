@@ -76,11 +76,14 @@ export default function OrgTeachersPage() {
 
 		try {
 			setLoading(true)
+			console.log('Fetching teachers for org:', orgSlug)
 			const response = await fetch(`/api/org/${orgSlug}/teachers`)
+			console.log('Teachers API response status:', response.status)
 			if (!response.ok) {
 				throw new Error('Failed to fetch teachers')
 			}
 			const data = await response.json()
+			console.log('Teachers data received:', data)
 			setTeachers(data.teachers)
 		} catch (error) {
 			console.error('Error fetching teachers:', error)

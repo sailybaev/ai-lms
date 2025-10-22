@@ -50,6 +50,7 @@ model User {
   files             File[]             @relation("UploadedFiles")
   graded            Grade[]            @relation("GradedBy")
   groupMemberships  GroupMember[]
+  assignedGroups    Group[]            @relation("AssignedTeacher")
   memberships       Membership[]
   progressEvents    ProgressEvent[]
   submissions       Submission[]
@@ -170,14 +171,16 @@ model Grade {
 }
 
 model Group {
-  id          String        @id @default(uuid())
-  orgId       String        @map("org_id")
-  courseId    String?       @map("course_id")
-  name        String
-  description String?
-  course      Course?       @relation(fields: [courseId], references: [id])
-  org         Organization  @relation(fields: [orgId], references: [id])
-  members     GroupMember[]
+  id                String        @id @default(uuid())
+  orgId             String        @map("org_id")
+  courseId          String?       @map("course_id")
+  assignedTeacherId String?       @map("assigned_teacher_id")
+  name              String
+  description       String?
+  course            Course?       @relation(fields: [courseId], references: [id])
+  org               Organization  @relation(fields: [orgId], references: [id])
+  assignedTeacher   User?         @relation("AssignedTeacher", fields: [assignedTeacherId], references: [id])
+  members           GroupMember[]
 }
 
 model GroupMember {

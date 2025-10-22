@@ -30,14 +30,16 @@ export async function GET(
 			)
 		}
 
-		// Verify user is admin in this org
+		// Verify user is admin or teacher in this org
 		const user = await prisma.user.findUnique({
 			where: { email: session.user.email },
 			include: {
 				memberships: {
 					where: {
 						orgId: organization.id,
-						role: 'admin',
+						role: {
+							in: ['admin', 'teacher'],
+						},
 					},
 				},
 			},
@@ -45,7 +47,10 @@ export async function GET(
 
 		if (!user || user.memberships.length === 0) {
 			return NextResponse.json(
-				{ error: 'You must be an organization admin to view students' },
+				{
+					error:
+						'You must be an admin or teacher in this organization to view students',
+				},
 				{ status: 403 }
 			)
 		}
@@ -76,7 +81,7 @@ export async function GET(
 		})
 
 		return NextResponse.json({
-			students: students.map(s => ({
+			students: students.map((s: any) => ({
 				id: s.user.id,
 				name: s.user.name,
 				email: s.user.email,
