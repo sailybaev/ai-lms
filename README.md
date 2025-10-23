@@ -78,7 +78,7 @@ npm run dev
 └── public/             # Static assets
 \`\`\`
 
-## Design System
+## Design System:
 
 - **Colors**: Blue primary with dark theme
 - **Typography**: Geist Sans for UI, Geist Mono for code
