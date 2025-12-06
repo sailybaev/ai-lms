@@ -43,6 +43,7 @@ model User {
   createdAt         DateTime           @default(now()) @map("created_at")
   lastActiveAt      DateTime?          @map("last_active_at")
   passwordHash      String?            @map("password_hash")
+  isSuperAdmin      Boolean            @default(false) @map("is_super_admin")
   aiSessions        AIChatSession[]
   createdCourses    Course[]           @relation("CourseCreatedBy")
   courseInstructors CourseInstructor[]

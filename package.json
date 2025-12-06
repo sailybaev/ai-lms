@@ -1,5 +1,5 @@
 {
-	"name": "my-v0-project",
+	"name": "ai-lms",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
@@ -9,11 +9,13 @@
 		"start": "next start",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
-		"prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
+		"prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
+		"create-superadmin": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/create-superadmin.ts"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.10.0",
 		"@prisma/client": "^6.17.1",
+		"react-is": "^18.2.0",
 		"@radix-ui/react-accordion": "1.2.2",
 		"@radix-ui/react-alert-dialog": "1.1.4",
 		"@radix-ui/react-aspect-ratio": "1.1.1",

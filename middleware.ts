@@ -17,10 +17,18 @@ export async function middleware(req: NextRequest) {
 		return NextResponse.next()
 	}
 
+	// Skip middleware for public routes
+	if (
+		pathname === '/login' ||
+		pathname.startsWith('/superadmin')
+	) {
+		return NextResponse.next()
+	}
+
 	// If path already has org prefix, enforce auth except login
 	const first = pathname.split('/').filter(Boolean)[0]
 	const hasOrgPrefix = Boolean(
-		first && !['admin', 'teacher', 'student'].includes(first)
+		first && !['admin', 'teacher', 'student', 'superadmin', 'login'].includes(first)
 	)
 	if (hasOrgPrefix) {
 		// Allow login page unauthenticated

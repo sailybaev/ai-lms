@@ -3,7 +3,22 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
 	const orgs = await prisma.organization.findMany({
-		select: { id: true, slug: true, name: true },
+		select: {
+			id: true,
+			slug: true,
+			name: true,
+			platformName: true,
+			createdAt: true,
+			_count: {
+				select: {
+					memberships: true,
+					courses: true,
+				},
+			},
+		},
+		orderBy: {
+			createdAt: 'desc',
+		},
 	})
 	return NextResponse.json({ orgs })
 }

@@ -10,6 +10,37 @@ export async function requireAuth() {
 }
 
 /**
+ * Check if the current user is a super admin
+ */
+export async function isSuperAdmin(userEmail: string): Promise<boolean> {
+	const user = await prisma.user.findUnique({
+		where: { email: userEmail },
+		select: { isSuperAdmin: true },
+	})
+	return user?.isSuperAdmin ?? false
+}
+
+/**
+ * Require super admin access
+ * Redirects to home if user is not a super admin
+ */
+export async function requireSuperAdmin(): Promise<{ email: string }> {
+	const session = (await getServerSession(authOptions as any)) as any
+
+	if (!session?.user?.email) {
+		redirect('/login?callbackUrl=/superadmin')
+	}
+
+	const isSuper = await isSuperAdmin(session.user.email)
+
+	if (!isSuper) {
+		redirect('/')
+	}
+
+	return { email: session.user.email }
+}
+
+/**
  * Get the user's role within a specific organization
  */
 export async function getUserOrgRole(

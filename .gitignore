@@ -30,3 +30,7 @@ next-env.d.ts
 /public/uploads/**/*
 !/public/uploads/**/.gitkeep
 !/public/uploads/**/README.md
+
+CLAUDE.md
+DOCKER.md
+README.md

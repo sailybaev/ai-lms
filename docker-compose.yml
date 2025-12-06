@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-lms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai-lms-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-lms-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database connection (container-to-container)
+      DATABASE_URL: "postgresql://admin:admin123@postgres:5432/mydb"
+      DIRECT_URL: "postgresql://admin:admin123@postgres:5432/mydb"
+
+      # NextAuth Configuration
+      NEXTAUTH_SECRET: "nciwnefiuehfmiqwhd99un918231n98"
+      NEXTAUTH_URL: "http://localhost:3000"
+
+      # Optional
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai-lms-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ai-lms-network:
+    driver: bridge

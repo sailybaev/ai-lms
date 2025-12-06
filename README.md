@@ -47,17 +47,46 @@ The platform includes AI-powered features:
 
 ## Getting Started
 
-1. Install dependencies:
-\`\`\`bash
-npm install
-\`\`\`
+### Quick Start with Docker (Recommended)
 
-2. Run the development server:
-\`\`\`bash
-npm run dev
-\`\`\`
+1. **Start the application**:
+   \`\`\`bash
+   docker-compose up -d
+   \`\`\`
 
-3. Open [http://localhost:3000](http://localhost:3000)
+2. **Run database migrations**:
+   \`\`\`bash
+   npm run prisma:migrate
+   \`\`\`
+
+3. **Access the application**: http://localhost:3000
+
+For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
+
+### Local Development Setup
+
+1. **Install dependencies**:
+   \`\`\`bash
+   npm install
+   \`\`\`
+
+2. **Configure environment**:
+   \`\`\`bash
+   cp .env.example .env
+   # Update DATABASE_URL to your local PostgreSQL
+   \`\`\`
+
+3. **Run database migrations**:
+   \`\`\`bash
+   npm run prisma:migrate
+   \`\`\`
+
+4. **Start development server**:
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+
+5. **Access the application**: http://localhost:3000
 
 ## Project Structure
 

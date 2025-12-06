@@ -1,3 +1,5 @@
+'use client'
+
 import { Card } from '@/components/ui/card'
 import { Award, Flame, Target, TrendingUp } from 'lucide-react'
 import {

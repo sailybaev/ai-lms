@@ -4,11 +4,13 @@ import {
 	Award,
 	BarChart3,
 	BookOpen,
+	Building2,
 	FileText,
 	GraduationCap,
 	LayoutDashboard,
 	MessageSquare,
 	Settings,
+	Shield,
 	Sparkles,
 	UserCircle,
 	Users,
@@ -39,6 +41,7 @@ type NavItem = {
 }
 
 type SidebarConfig = {
+	superadmin: NavItem[]
 	admin: NavItem[]
 	orgAdmin: NavItem[]
 	teacher: NavItem[]
@@ -46,6 +49,14 @@ type SidebarConfig = {
 }
 
 const sidebarConfig: SidebarConfig = {
+	superadmin: [
+		{ title: 'Dashboard', url: '/superadmin', icon: LayoutDashboard },
+		{ title: 'Organizations', url: '/superadmin/organizations', icon: Building2 },
+		{ title: 'Super Admins', url: '/superadmin/admins', icon: Shield },
+		{ title: 'All Users', url: '/superadmin/users', icon: Users },
+		{ title: 'Analytics', url: '/superadmin/analytics', icon: BarChart3 },
+		{ title: 'Settings', url: '/superadmin/settings', icon: Settings },
+	],
 	admin: [
 		{ title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
 		{ title: 'Organizations', url: '/admin/organizations', icon: UsersRound },
@@ -92,15 +103,15 @@ const sidebarConfig: SidebarConfig = {
 export function AppSidebar({
 	role,
 }: {
-	role: 'admin' | 'orgAdmin' | 'teacher' | 'student'
+	role: 'superadmin' | 'admin' | 'orgAdmin' | 'teacher' | 'student'
 }) {
 	const pathname = usePathname()
 	const items = sidebarConfig[role]
 	const { orgSlug, organization } = useOrg()
 
 	// Use organization's branding if available, otherwise use defaults
-	const platformName = organization?.platformName || 'EduAI'
-	const logoUrl = organization?.logoUrl
+	const platformName = role === 'superadmin' ? 'Super Admin Panel' : (organization?.platformName || 'EduAI')
+	const logoUrl = role === 'superadmin' ? null : organization?.logoUrl
 
 	return (
 		<Sidebar>
@@ -113,6 +124,8 @@ export function AppSidebar({
 								alt={platformName}
 								className='w-full h-full object-cover'
 							/>
+						) : role === 'superadmin' ? (
+							<Shield className='w-5 h-5 text-sidebar-primary-foreground' />
 						) : (
 							<GraduationCap className='w-5 h-5 text-sidebar-primary-foreground' />
 						)}
@@ -120,7 +133,7 @@ export function AppSidebar({
 					<div className='flex flex-col'>
 						<span className='text-sm font-semibold'>{platformName}</span>
 						<span className='text-xs text-sidebar-foreground/60 capitalize'>
-							{role === 'orgAdmin' ? 'Org Admin' : role}
+							{role === 'orgAdmin' ? 'Org Admin' : role === 'superadmin' ? 'Super Admin' : role}
 						</span>
 					</div>
 				</Link>
@@ -131,7 +144,7 @@ export function AppSidebar({
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{items.map(item => {
-								const url = orgSlug ? `/${orgSlug}${item.url}` : item.url
+								const url = (orgSlug && role !== 'superadmin') ? `/${orgSlug}${item.url}` : item.url
 								const isActive = pathname === url
 								return (
 									<SidebarMenuItem key={item.title}>
@@ -156,7 +169,7 @@ export function AppSidebar({
 					<div className='flex-1 min-w-0'>
 						<p className='text-sm font-medium truncate'>Demo User</p>
 						<p className='text-xs text-sidebar-foreground/60 truncate capitalize'>
-							{role === 'orgAdmin' ? 'Org Admin' : role}
+							{role === 'orgAdmin' ? 'Org Admin' : role === 'superadmin' ? 'Super Admin' : role}
 						</p>
 					</div>
 				</div>
