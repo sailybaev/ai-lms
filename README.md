@@ -107,7 +107,7 @@ For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
 └── public/             # Static assets
 \`\`\`
 
-## Design System
+## Design System:
 
 - **Colors**: Blue primary with dark theme
 - **Typography**: Geist Sans for UI, Geist Mono for code
