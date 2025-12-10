@@ -36,7 +36,6 @@ export async function DELETE(
 	{ params }: { params: { id: string } }
 ) {
 	try {
-		// Check if organization has any data
 		const org = await prisma.organization.findUnique({
 			where: { id: params.id },
 			include: {
