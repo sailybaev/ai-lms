@@ -7,7 +7,7 @@ import { Suspense } from 'react'
 import './globals.css'
 
 export const metadata: Metadata = {
-	title: 'EduAI - AI-Powered Learning Management System',
+	title: 'EduAI - AI-Powered Learning Management System. ',
 	description:
 		'Modern LMS with AI-powered tools for students, teachers, and administrators',
 		
