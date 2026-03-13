@@ -2,8 +2,6 @@
  * User management utilities for admin operations
  */
 
-import { MembershipStatus, Role } from '@prisma/client'
-
 export type UserWithMembership = {
 	id: string
 	name: string
@@ -13,8 +11,8 @@ export type UserWithMembership = {
 	lastActiveAt: Date | null
 	memberships: Array<{
 		id: string
-		role: Role
-		status: MembershipStatus
+		role: string
+		status: string
 		org: {
 			id: string
 			name: string
@@ -31,8 +29,8 @@ export type UpdateUserPayload = {
 
 export type UpdateMembershipPayload = {
 	orgId: string
-	role?: Role
-	status?: MembershipStatus
+	role?: string
+	status?: string
 }
 
 /**

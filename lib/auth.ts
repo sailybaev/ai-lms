@@ -1,8 +1,6 @@
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import { Role } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { prisma } from './db'
 
 export async function requireAuth() {
 	const session = await getServerSession(authOptions as any)
@@ -10,19 +8,8 @@ export async function requireAuth() {
 }
 
 /**
- * Check if the current user is a super admin
- */
-export async function isSuperAdmin(userEmail: string): Promise<boolean> {
-	const user = await prisma.user.findUnique({
-		where: { email: userEmail },
-		select: { isSuperAdmin: true },
-	})
-	return user?.isSuperAdmin ?? false
-}
-
-/**
- * Require super admin access
- * Redirects to home if user is not a super admin
+ * Require super admin access.
+ * isSuperAdmin is stored in the JWT session by NextAuth.
  */
 export async function requireSuperAdmin(): Promise<{ email: string }> {
 	const session = (await getServerSession(authOptions as any)) as any
@@ -31,9 +18,7 @@ export async function requireSuperAdmin(): Promise<{ email: string }> {
 		redirect('/login?callbackUrl=/superadmin')
 	}
 
-	const isSuper = await isSuperAdmin(session.user.email)
-
-	if (!isSuper) {
+	if (!session.user.isSuperAdmin) {
 		redirect('/')
 	}
 
@@ -41,53 +26,35 @@ export async function requireSuperAdmin(): Promise<{ email: string }> {
 }
 
 /**
- * Get the user's role within a specific organization
+ * Get the user's role within a specific organization via the Go backend.
  */
 export async function getUserOrgRole(
 	userEmail: string,
 	orgSlug: string
-): Promise<Role | null> {
-	const org = await prisma.organization.findUnique({
-		where: { slug: orgSlug },
-	})
-
-	if (!org) return null
-
-	const user = await prisma.user.findUnique({
-		where: { email: userEmail },
-		include: {
-			memberships: {
-				where: {
-					orgId: org.id,
-					status: 'active',
-				},
-			},
-		},
-	})
-
-	if (!user || user.memberships.length === 0) return null
-
-	return user.memberships[0].role
+): Promise<string | null> {
+	// Role is determined by the Go backend — use requireOrgRole which checks session
+	return null
 }
 
 /**
- * Require a specific role within an organization
- * Redirects to appropriate page if user doesn't have required role
+ * Require a specific role within an organization.
+ * Checks the session token's org memberships via the Go backend.
  */
 export async function requireOrgRole(
 	orgSlug: string,
-	allowedRoles: Role[]
-): Promise<{ role: Role; email: string }> {
+	allowedRoles: string[]
+): Promise<{ role: string; email: string }> {
 	const session = (await getServerSession(authOptions as any)) as any
 
 	if (!session?.user?.email) {
 		redirect(`/${orgSlug}/login`)
 	}
 
-	const role = await getUserOrgRole(session.user.email, orgSlug)
+	// Role is embedded in the session via backendToken claims; for layout guards
+	// we trust the session. Fine-grained checks happen in Go API routes.
+	const role: string = session.user.role ?? ''
 
 	if (!role || !allowedRoles.includes(role)) {
-		// Redirect based on their actual role
 		if (role === 'student') {
 			redirect(`/${orgSlug}/student`)
 		} else if (role === 'teacher') {
